@@ -50,17 +50,32 @@ public class MainActivity extends AppCompatActivity {
         clearButton = (Button) findViewById(R.id.clearButton);
 
         setUiEnabled(false);
+        registerBroadCastEvent();
+        requestConnectionPermission();
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(serialPort == null){
+            requestConnectionPermission();
+        }
+        registerBroadCastEvent();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
+    }
+
+    private void registerBroadCastEvent(){
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
     }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
@@ -69,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             String data = null;
             try {
                 data = new String(bytes, "ASCII");
-                data.concat("/n");
+                data.concat("\n");
                 tvAppend(logText, data);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -170,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
             //trim does the magic when door number is not specified for door/empty command.
             String command = String.format(commandFormatter, doorNumberText.getText()).trim();
             serialPort.write(command.getBytes(Charset.forName("ASCII")));
-            tvAppend(logText, String.format("Command: %s \n", command));
+            tvAppend(logText, String.format("\nCommand: %s \n", command));
         }
     }
 
