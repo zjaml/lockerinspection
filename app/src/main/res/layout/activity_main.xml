@@ -29,42 +29,46 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/checkInButton"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onCheckInClicked (MainActivity)" />
 
             <Button
                 android:text="C-OUT"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/checkoutButton"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onCheckOutClicked (MainActivity)" />
 
             <Button
                 android:text="Door"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/doorButton"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onDoorClicked (MainActivity)" />
 
             <Button
                 android:text="Empty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/emptyButton"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onEmptyClicked (MainActivity)" />
 
             <Button
                 android:text="Clear"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/clearButton"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onClearClicked (MainActivity)" />
         </LinearLayout>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical"
-        android:id="@+id/logText"
-        android:text="Log" />
+        android:id="@+id/logText" />
 
 
 </LinearLayout>

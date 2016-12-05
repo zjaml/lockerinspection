@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -19,6 +20,7 @@ import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -130,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
     public void disconnect() {
         setUiEnabled(false);
         serialPort.close();
+        connection = null;
+        device = null;
         tvAppend(logText,"\nSerial Connection Closed! \n");
     }
 
@@ -152,7 +156,34 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void sendCommand(String commandFormatter){
+        if(connection != null){
+            //trim does the magic when door number is not specified for door/empty command.
+            String command = String.format(commandFormatter, doorNumberText.getText()).trim();
+            serialPort.write(command.getBytes(Charset.forName("ASCII")));
+            tvAppend(logText, String.format("Command: %s \n", command));
+        }
+    }
 
+    public void onCheckInClicked(View view) {
+        sendCommand("O%2sT");
+    }
+
+    public void onCheckOutClicked(View view) {
+        sendCommand("O%2sR");
+    }
+
+    public void onDoorClicked(View view) {
+        sendCommand("D%2s");
+    }
+
+    public void onEmptyClicked(View view) {
+        sendCommand("E%2s");
+    }
+
+    public void onClearClicked(View view) {
+        logText.setText("");
+    }
 }
 
 
