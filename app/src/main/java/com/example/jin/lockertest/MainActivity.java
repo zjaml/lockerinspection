@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setUiEnabled(boolean bool) {
-        checkInButton.setEnabled(!bool);
+        checkInButton.setEnabled(bool);
         checkOutButton.setEnabled(bool);
         doorButton.setEnabled(bool);
         emptyButton.setEnabled(bool);
