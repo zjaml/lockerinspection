@@ -2,7 +2,11 @@
 Build source with Android Studio.
 
 # How to use
-![screenshot](images/1.jpg)
+<div style="width:300px">
+
+  ![screenshot](images/1.jpg)
+</div>
+
 
 ## Log Area
  show command issued and response from the board.
