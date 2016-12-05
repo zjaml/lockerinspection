@@ -13,6 +13,7 @@ Input door number and press C-OUT button.
 ## Door state query
 * Input door number and press DOOR button.
 * if door number is empty, door state query for all boxes will be issued.
+
 ## Empty state query
 * Input door number and press EMPTY button.
 * if door number is empty, state query for all boxes will be issued.
