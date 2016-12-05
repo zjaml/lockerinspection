@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
         doorNumberText = (TextView) findViewById(R.id.doorNumberText);
         logText = (TextView) findViewById(R.id.logText);
         logText.setMovementMethod(new ScrollingMovementMethod());
@@ -54,6 +55,12 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
     }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
@@ -131,7 +138,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void disconnect() {
         setUiEnabled(false);
-        serialPort.close();
+        if(serialPort != null) {
+            serialPort.close();
+        }
         connection = null;
         device = null;
         tvAppend(logText,"\nSerial Connection Closed! \n");
