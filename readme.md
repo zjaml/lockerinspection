@@ -1,3 +1,6 @@
+# Prerequisite
+Android device need to support OTG mode.
+
 # Install
 Build source with Android Studio.
 
