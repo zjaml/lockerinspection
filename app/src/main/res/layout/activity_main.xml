@@ -13,7 +13,7 @@
             android:layout_height="wrap_content"
             android:inputType="numberDecimal"
             android:ems="10"
-            android:id="@+id/editText"
+            android:id="@+id/doorNumberText"
             android:hint="Locker Number"
             android:text="01"
             android:textAlignment="center"
@@ -28,35 +28,35 @@
                 android:text="C-IN"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button8"
+                android:id="@+id/checkInButton"
                 android:layout_weight="1" />
 
             <Button
                 android:text="C-OUT"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button10"
+                android:id="@+id/checkoutButton"
                 android:layout_weight="1" />
 
             <Button
                 android:text="Door"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button9"
+                android:id="@+id/doorButton"
                 android:layout_weight="1" />
 
             <Button
                 android:text="Empty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button11"
+                android:id="@+id/emptyButton"
                 android:layout_weight="1" />
 
             <Button
                 android:text="Clear"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button12"
+                android:id="@+id/clearButton"
                 android:layout_weight="1" />
         </LinearLayout>
     <TextView
