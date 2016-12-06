@@ -10,6 +10,7 @@ Build source with Android Studio.
 * Open the app and connect the board. 
 * Grant USB permission to the app.
 * The button will be enabled when connection is established.
+
 ## Log Area
  show command issued and response from the board.
 ## Check in Command
