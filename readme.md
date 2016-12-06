@@ -6,7 +6,10 @@ Build source with Android Studio.
 
 # How to use
 <img src="images/1.jpg" width="300px">
-
+## connect the board
+* Open the app and connect the board. 
+* Grant USB permission to the app.
+* The button will be enabled when connection is established.
 ## Log Area
  show command issued and response from the board.
 ## Check in Command
