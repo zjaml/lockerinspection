@@ -24,3 +24,11 @@ Input door number and press C-OUT button.
 ## Empty state query
 * Input door number and press EMPTY button.
 * if door number is empty, state query for all boxes will be issued.
+
+## Charging control
+The app monitors battery level and charging state of the device, and issues command to board to start/stop charging.
+* When battery level goes below 15%, Command: LOW to start charging
+  * The app will continue to monitor charging state, and issue LOW command periodically until the device is being charged.
+* When battery goes above 95%, Command: HIGH to stop charging
+  * The app will continue to monitor charging state, and issue HIGH command periodically until the device is being discharged.
+* press CHARGE/DISCHARGE to simulate the LOW/HIGH command, making test easier.

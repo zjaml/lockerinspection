@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.os.BatteryManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -18,6 +19,8 @@ import android.widget.TextView;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
+
+import junit.runner.BaseTestRunner;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -75,6 +78,11 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+//        below need API 23 +
+//        filter.addAction(BatteryManager.ACTION_CHARGING);
+//        filter.addAction(BatteryManager.ACTION_DISCHARGING);
+        filter.addAction(Intent.ACTION_BATTERY_LOW);
+        filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(broadcastReceiver, filter);
     }
 
@@ -123,6 +131,17 @@ public class MainActivity extends AppCompatActivity {
                 requestConnectionPermission();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 disconnect();
+            }else if(intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)){
+                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                float batteryPct = level / (float)scale;
+                if(batteryPct < 0.15 && status== BatteryManager.BATTERY_STATUS_DISCHARGING){
+                    sendCommand("LOW");
+                }
+                if(batteryPct > 0.95 && status== BatteryManager.BATTERY_STATUS_CHARGING){
+                    sendCommand("HIGH");
+                }
             }
         }
     };
@@ -207,6 +226,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClearClicked(View view) {
         logText.setText("");
+    }
+
+    public void onChargeClicked(View view){
+        Log.d("CHARGE", "LOW");
+        sendCommand("LOW");
+    }
+
+    public void onDischargeClicked(View view){
+        Log.d("CHARGE", "HIGH");
+        sendCommand("HIGH");
     }
 }
 

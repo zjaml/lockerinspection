@@ -67,6 +67,29 @@
             android:text="Clear" />
     </LinearLayout>
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="59dp">
+
+        <Button
+            android:text="Charge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/button2"
+            android:onClick="onChargeClicked" />
+
+        <Button
+            android:text="Discharge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button3"
+            android:layout_weight="1"
+            android:onClick="onDischargeClicked" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/logText"
         android:layout_width="match_parent"
