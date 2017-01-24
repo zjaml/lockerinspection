@@ -34,21 +34,21 @@ public class MainActivity extends AppCompatActivity {
     UsbDevice device;
 
     TextView doorNumberText, logText;
-    Button checkInButton, checkOutButton, doorButton, emptyButton, clearButton;
+//    Button checkInButton, checkOutButton, doorButton, emptyButton, clearButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
-        doorNumberText = (TextView) findViewById(R.id.doorNumberText);
+//        doorNumberText = (TextView) findViewById(R.id.doorNumberText);
         logText = (TextView) findViewById(R.id.logText);
         logText.setMovementMethod(new ScrollingMovementMethod());
-        checkInButton = (Button) findViewById(R.id.checkInButton);
-        checkOutButton = (Button) findViewById(R.id.checkoutButton);
-        doorButton = (Button) findViewById(R.id.doorButton);
-        emptyButton = (Button) findViewById(R.id.emptyButton);
-        clearButton = (Button) findViewById(R.id.clearButton);
+//        checkInButton = (Button) findViewById(R.id.checkInButton);
+//        checkOutButton = (Button) findViewById(R.id.checkoutButton);
+//        doorButton = (Button) findViewById(R.id.doorButton);
+//        emptyButton = (Button) findViewById(R.id.emptyButton);
+//        clearButton = (Button) findViewById(R.id.clearButton);
 
         setUiEnabled(false);
         registerBroadCastEvent();
@@ -179,10 +179,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setUiEnabled(boolean bool) {
-        checkInButton.setEnabled(bool);
-        checkOutButton.setEnabled(bool);
-        doorButton.setEnabled(bool);
-        emptyButton.setEnabled(bool);
+//        checkInButton.setEnabled(bool);
+//        checkOutButton.setEnabled(bool);
+//        doorButton.setEnabled(bool);
+//        emptyButton.setEnabled(bool);
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
