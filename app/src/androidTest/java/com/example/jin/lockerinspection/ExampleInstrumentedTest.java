@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.example.jin.lockertest", appContext.getPackageName());
+        assertEquals("com.example.jin.lockerinspection", appContext.getPackageName());
     }
 }
