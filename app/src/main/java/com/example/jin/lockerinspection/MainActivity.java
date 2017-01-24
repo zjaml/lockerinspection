@@ -27,7 +27,7 @@ import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
-    public final String ACTION_USB_PERMISSION = "com.example.jin.lockertest.USB_PERMISSION";
+    public final String ACTION_USB_PERMISSION = "com.example.jin.lockerinspection.USB_PERMISSION";
     UsbManager usbManager;
     UsbDeviceConnection connection;
     UsbSerialDevice serialPort;
