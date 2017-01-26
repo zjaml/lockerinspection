@@ -34,19 +34,22 @@
                 android:text="开始"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/startButton" />
+                android:id="@+id/startButton"
+                android:onClick="onStartClick"/>
 
             <Button
                 android:text="下一步"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/nextButton" />
+                android:id="@+id/nextButton"
+                android:onClick="onNextClick"/>
 
             <Button
                 android:text="中止"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/stopButton" />
+                android:id="@+id/stopButton"
+                android:onClick="onStopClick"/>
 
         </LinearLayout>
 
