@@ -19,3 +19,7 @@
 * Send Ack back when received checkin/checkout command
 * Send Door close event back after a short period
 * Create some exception empty status event.
+
+
+# Issues:
+OnReceiveData event receives byte array which are not be delimited by line break.
