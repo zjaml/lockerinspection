@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
@@ -19,6 +20,10 @@ import android.widget.TextView;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -39,8 +44,10 @@ public class MainActivity extends AppCompatActivity {
     Button startButton, nextButton, stopButton;
 
     List<LockerAction> actions = new ArrayList<>();
+    List<LockerAction> previousResult = null;
 
-    int currentCommand = -1; //the current command index, -1 stands for testing stopped.
+    //the current command index, -1 stands for testing stopped.
+    int currentCommand = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         nextButton = (Button) findViewById(R.id.nextButton);
         stopButton = (Button) findViewById(R.id.stopButton);
         initActions();
+        setButtonsVisibility(false, false, false);
     }
 
     private void initActions() {
@@ -117,23 +125,31 @@ public class MainActivity extends AppCompatActivity {
                                 public void onReceivedData(byte[] bytes) {
                                     String data;
                                     try {
-                                        data = new String(bytes, "ASCII");
-                                        LockerAction currentAction = actions.get(currentCommand);
-                                        if(data.equals("A")){
-                                            currentAction.setAcked(true);
-                                        }else if(data.equals(String.format("E%s", currentAction.getDoorNumber()))){
-                                            currentAction.setWasEmpty(true);
-                                            currentAction.setCompleted(true);
-                                        }else if(data.equals(String.format("F%s", currentAction.getDoorNumber()))){
-                                            currentAction.setWasEmpty(false);
-                                            currentAction.setCompleted(true);
+                                        if (currentCommand >= 0) {
+//                                            ignore if app is stopped
+                                            data = new String(bytes, "ASCII");
+                                            LockerAction currentAction = actions.get(currentCommand);
+                                            if (data.equals("A")) {
+                                                currentAction.setAcked(true);
+                                            } else if (data.equals(String.format("E%s", currentAction.getDoorNumber()))) {
+                                                currentAction.setWasEmpty(true);
+                                                currentAction.setCompleted(true);
+                                                setButtonsVisibility(false, true, true);
+                                            } else if (data.equals(String.format("F%s", currentAction.getDoorNumber()))) {
+                                                currentAction.setWasEmpty(false);
+                                                currentAction.setCompleted(true);
+                                                setButtonsVisibility(false, true, true);
+                                            } else {
+                                                // display unexpected data.
+                                                setOperationMessage(String.format("接收到未想定消息:%s", data));
+                                            }
                                         }
                                     } catch (UnsupportedEncodingException e) {
-                                        tvAppend(logText, e.getMessage());
+                                        setOperationMessage(e.getMessage());
                                     }
                                 }
                             });
-                            tvAppend(logText, "Serial Connection Opened!\n");
+                            setOperationMessage("USB连接成功");
                         } else {
                             Log.d("SERIAL", "PORT NOT OPEN");
                         }
@@ -180,17 +196,37 @@ public class MainActivity extends AppCompatActivity {
         }
         connection = null;
         device = null;
-        tvAppend(logText, "\nSerial Connection Closed! \n");
+        setOperationMessage("USB连接断开");
+        setButtonsVisibility(false, false, false);
     }
 
-    private void tvAppend(TextView tv, CharSequence text) {
-        final TextView ftv = tv;
-        final CharSequence ftext = text;
-
+    private void setOperationMessage(final String message) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ftv.append(ftext);
+                operationText.setText(message);
+                logText.append(message);
+            }
+        });
+    }
+
+    private void appendOperationMessage(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                operationText.append(message);
+                logText.append(message);
+            }
+        });
+    }
+
+    private void setButtonsVisibility(final boolean startButtonVisible, final boolean nextButtonVisible, final boolean stopButtonVisible) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                startButton.setVisibility(startButtonVisible ? View.VISIBLE : View.INVISIBLE);
+                nextButton.setVisibility(nextButtonVisible ? View.VISIBLE : View.INVISIBLE);
+                stopButton.setVisibility(stopButtonVisible ? View.VISIBLE : View.INVISIBLE);
             }
         });
     }
@@ -198,23 +234,30 @@ public class MainActivity extends AppCompatActivity {
     public void onStartClick(View view) {
         currentCommand = 0;
         performAction(actions.get(currentCommand));
+        setButtonsVisibility(false, true, true);
     }
 
     private void performAction(LockerAction action) {
-        if(!action.issued()){
-            String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn()?"T":"R" );
+        if (!action.issued()) {
+            String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
             serialPort.write(command.getBytes(Charset.forName("ASCII")));
         }
     }
 
     public void onNextClick(View view) {
-        currentCommand ++;
+        currentCommand++;
         performAction(actions.get(currentCommand));
+        //disable next button until the current action finishes.
+        setButtonsVisibility(false, false, true);
     }
 
     public void onStopClick(View view) {
+        previousResult = new ArrayList<>(actions);
         currentCommand = -1;
+        initActions();
+        setButtonsVisibility(true, false, false);
     }
+
 }
 
 
