@@ -26,9 +26,10 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/operationText"
                 android:gravity="center"
-                android:layout_weight="0.27"
+                android:layout_weight="0.37"
                 android:textAlignment="center"
-                android:textAllCaps="false" />
+                android:textAllCaps="false"
+                android:textSize="16sp" />
 
             <Button
                 android:text="开始"
@@ -62,7 +63,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/logText"
-                android:text="log "
                 android:scrollbars="vertical"
                 android:textAlignment="center" />
         </LinearLayout>
