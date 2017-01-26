@@ -144,20 +144,16 @@ public class MainActivity extends AppCompatActivity {
                                     String data;
                                     try {
                                         data = new String(bytes, "ASCII");
+                                        Log.d("Debug", "data is" + data);
                                         messageBuffer.append(data);
-                                        if (!data.endsWith("\n")) {
-                                            Log.d("Debug", "(Concat)data was" + data);
-                                            messageBuffer.append(data);
-                                            Log.d("Debug", messageBuffer.toString());
-                                        } else {
-                                            Log.d("Debug", "complete message?" + messageBuffer.toString());
-                                            Log.d("Debug", "data was" + data);
-
+                                        if (data.endsWith("\n")) {
                                             String message = messageBuffer.toString();
+                                            Log.d("Debug", message);
                                             messageBuffer = new StringBuilder();
                                             if (currentCommand >= 0) {
                                                 LockerAction currentAction = actions.get(currentCommand);
                                                 if (message.equals("A")) {
+                                                    Log.d("Debug", "A");
                                                     currentAction.setAcked(true);
                                                 } else if (message.equals(String.format("E%s", currentAction.getDoorNumber()))) {
                                                     currentAction.setWasEmpty(true);
