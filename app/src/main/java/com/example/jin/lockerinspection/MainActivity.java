@@ -10,6 +10,8 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         nextButton = (Button) findViewById(R.id.nextButton);
         stopButton = (Button) findViewById(R.id.stopButton);
         initActions();
+        setOperationMessage("请连接储物柜的USB");
         setButtonsVisibility(false, false, false);
     }
 
@@ -130,14 +133,14 @@ public class MainActivity extends AppCompatActivity {
                                                 currentAction.setCompleted(true);
                                                 setButtonsVisibility(false, true, true);
                                                 boolean success = !currentAction.isCheckIn();
-                                                appendOperationMessage(String.format("%s号门已关闭，未检测到物体，结果%s\n",
+                                                appendOperationMessage(String.format("%s号门已关闭，未检测到物体 \n 结果%s\n",
                                                         currentAction.getDoorNumber(),success?"正常":"异常"));
                                             } else if (data.equals(String.format("F%s", currentAction.getDoorNumber()))) {
                                                 currentAction.setWasEmpty(false);
                                                 currentAction.setCompleted(true);
                                                 setButtonsVisibility(false, true, true);
                                                 boolean success = currentAction.isCheckIn();
-                                                appendOperationMessage(String.format("%s号门已关闭，检测到物体，结果%s\n",
+                                                appendOperationMessage(String.format("%s号门已关闭，检测到物体 \n 结果%s\n",
                                                         currentAction.getDoorNumber(),success?"正常":"异常"));
                                             } else {
                                                 // display unexpected data.
@@ -149,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             });
-                            setOperationMessage("USB连接成功");
+                            setOperationMessage("USB连接成功,请准备5个小东西做存放检测，点击开始按钮开始测试");
                         } else {
                             Log.d("SERIAL", "PORT NOT OPEN");
                         }
