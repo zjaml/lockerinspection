@@ -14,12 +14,14 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initActions() {
         //check in 6 then checkout 6, do 5 loops to check all 30 boxes.
+        actions.clear();
         int baseDoorNumber = 1;
         boolean isCheckIn;
         for (int i = 0; i < 10; i++) {
@@ -115,10 +118,18 @@ public class MainActivity extends AppCompatActivity {
                                     String data;
                                     try {
                                         data = new String(bytes, "ASCII");
-                                        data.concat("\n");
-                                        tvAppend(logText, data);
+                                        LockerAction currentAction = actions.get(currentCommand);
+                                        if(data.equals("A")){
+                                            currentAction.setAcked(true);
+                                        }else if(data.equals(String.format("E%s", currentAction.getDoorNumber()))){
+                                            currentAction.setWasEmpty(true);
+                                            currentAction.setCompleted(true);
+                                        }else if(data.equals(String.format("F%s", currentAction.getDoorNumber()))){
+                                            currentAction.setWasEmpty(false);
+                                            currentAction.setCompleted(true);
+                                        }
                                     } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
+                                        tvAppend(logText, e.getMessage());
                                     }
                                 }
                             });
@@ -190,7 +201,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performAction(LockerAction action) {
-
+        if(!action.issued()){
+            String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn()?"T":"R" );
+            serialPort.write(command.getBytes(Charset.forName("ASCII")));
+        }
     }
 
     public void onNextClick(View view) {
@@ -200,15 +214,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void onStopClick(View view) {
         currentCommand = -1;
-    }
-
-    private void sendCommand(String commandFormatter) {
-        if (connection != null) {
-            //trim does the magic when door number is not specified for door/empty command.
-//            String command = String.format(commandFormatter, doorNumberText.getText()).trim();
-//            serialPort.write(command.getBytes(Charset.forName("ASCII")));
-//            tvAppend(logText, String.format("\nCommand: %s \n", command));
-        }
     }
 }
 

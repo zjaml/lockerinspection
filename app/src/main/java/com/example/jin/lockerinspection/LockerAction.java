@@ -7,6 +7,7 @@ package com.example.jin.lockerinspection;
 public class LockerAction {
     private boolean isCheckIn;
     private String doorNumber;
+    private boolean issued;
     private boolean acked;
     private boolean completed;
     private boolean wasEmpty;
@@ -54,5 +55,13 @@ public class LockerAction {
 
     public void setWasEmpty(boolean wasEmpty) {
         this.wasEmpty = wasEmpty;
+    }
+
+    public boolean issued() {
+        return issued;
+    }
+
+    public void setIssued(boolean issued) {
+        this.issued = issued;
     }
 }
