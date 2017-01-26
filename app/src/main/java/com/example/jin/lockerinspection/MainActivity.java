@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     List<LockerAction> actions = new ArrayList<>();
 
     int currentCommand = -1; //the current command index, -1 stands for testing stopped.
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,10 +63,10 @@ public class MainActivity extends AppCompatActivity {
             for (int j = 0; j < 6; j++) {
                 int doorNumber = baseDoorNumber + j;
                 actions.add(
-                        new LockerAction(isCheckIn, String.format("%02d",doorNumber)));
+                        new LockerAction(isCheckIn, String.format("%02d", doorNumber)));
 
             }
-            if(!isCheckIn)
+            if (!isCheckIn)
                 baseDoorNumber += 6;
         }
     }
@@ -111,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                             serialPort.read(new UsbSerialInterface.UsbReadCallback() {
                                 @Override
                                 public void onReceivedData(byte[] bytes) {
-                                    String data = null;
+                                    String data;
                                     try {
                                         data = new String(bytes, "ASCII");
                                         data.concat("\n");
@@ -156,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
                     connection = null;
                     device = null;
                 }
-
                 if (!keep)
                     break;
             }
@@ -185,15 +185,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onStartClick(View view) {
+        currentCommand = 0;
+        performAction(actions.get(currentCommand));
+    }
+
+    private void performAction(LockerAction action) {
 
     }
 
     public void onNextClick(View view) {
-
+        currentCommand ++;
+        performAction(actions.get(currentCommand));
     }
 
     public void onStopClick(View view) {
-
+        currentCommand = -1;
     }
 
     private void sendCommand(String commandFormatter) {
