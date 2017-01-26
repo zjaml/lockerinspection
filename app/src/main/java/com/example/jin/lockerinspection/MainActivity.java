@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     //the current command index, -1 stands for testing stopped.
     int currentCommand = -1;
 
+    StringBuilder messageBuffer = new StringBuilder();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,8 +60,21 @@ public class MainActivity extends AppCompatActivity {
         nextButton = (Button) findViewById(R.id.nextButton);
         stopButton = (Button) findViewById(R.id.stopButton);
         initActions();
-        setOperationMessage("请连接储物柜的USB");
-        setButtonsVisibility(false, false, false);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        initUIState();
+    }
+
+    private void initUIState() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                operationText.setText("请连接储物柜的USB\n");
+                logText.setText("");
+                startButton.setVisibility(View.INVISIBLE);
+                nextButton.setVisibility(View.INVISIBLE);
+                stopButton.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
     private void initActions() {
@@ -82,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("Debug", "OnResume");
         if (serialPort == null) {
             requestConnectionPermission();
         }
@@ -108,10 +125,13 @@ public class MainActivity extends AppCompatActivity {
             if (intent.getAction().equals(ACTION_USB_PERMISSION)) {
                 boolean granted = intent.getExtras().getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
                 if (granted) {
+                    Log.d("Debug", "Trying to establish USB connection");
                     connection = usbManager.openDevice(device);
                     serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
                     if (serialPort != null) {
                         if (serialPort.open()) { //Set Serial Connection Parameters.
+
+                            Log.d("Debug", "Serial port open");
                             serialPort.setBaudRate(9600);
                             serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
                             serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
@@ -120,31 +140,43 @@ public class MainActivity extends AppCompatActivity {
                             serialPort.read(new UsbSerialInterface.UsbReadCallback() {
                                 @Override
                                 public void onReceivedData(byte[] bytes) {
+                                    Log.d("Debug","Received New Data");
                                     String data;
                                     try {
-                                        if (currentCommand >= 0) {
-//                                            ignore if app is stopped
-                                            data = new String(bytes, "ASCII");
-                                            LockerAction currentAction = actions.get(currentCommand);
-                                            if (data.equals("A")) {
-                                                currentAction.setAcked(true);
-                                            } else if (data.equals(String.format("E%s", currentAction.getDoorNumber()))) {
-                                                currentAction.setWasEmpty(true);
-                                                currentAction.setCompleted(true);
-                                                setButtonsVisibility(false, true, true);
-                                                boolean success = !currentAction.isCheckIn();
-                                                appendOperationMessage(String.format("%s号门已关闭，未检测到物体 \n 结果%s\n",
-                                                        currentAction.getDoorNumber(),success?"正常":"异常"));
-                                            } else if (data.equals(String.format("F%s", currentAction.getDoorNumber()))) {
-                                                currentAction.setWasEmpty(false);
-                                                currentAction.setCompleted(true);
-                                                setButtonsVisibility(false, true, true);
-                                                boolean success = currentAction.isCheckIn();
-                                                appendOperationMessage(String.format("%s号门已关闭，检测到物体 \n 结果%s\n",
-                                                        currentAction.getDoorNumber(),success?"正常":"异常"));
-                                            } else {
-                                                // display unexpected data.
-                                                setOperationMessage(String.format("接收到未想定消息:%s", data));
+                                        data = new String(bytes, "ASCII");
+                                        messageBuffer.append(data);
+                                        if (!data.endsWith("\n")) {
+                                            Log.d("Debug", "(Concat)data was" + data);
+                                            messageBuffer.append(data);
+                                            Log.d("Debug", messageBuffer.toString());
+                                        } else {
+                                            Log.d("Debug", "complete message?" + messageBuffer.toString());
+                                            Log.d("Debug", "data was" + data);
+
+                                            String message = messageBuffer.toString();
+                                            messageBuffer = new StringBuilder();
+                                            if (currentCommand >= 0) {
+                                                LockerAction currentAction = actions.get(currentCommand);
+                                                if (message.equals("A")) {
+                                                    currentAction.setAcked(true);
+                                                } else if (message.equals(String.format("E%s", currentAction.getDoorNumber()))) {
+                                                    currentAction.setWasEmpty(true);
+                                                    currentAction.setCompleted(true);
+                                                    setButtonsVisibility(false, true, true);
+                                                    boolean success = !currentAction.isCheckIn();
+                                                    appendOperationMessage(String.format("%s号门已关闭，未检测到物体 \n 结果%s\n",
+                                                            currentAction.getDoorNumber(), success ? "正常" : "异常"));
+                                                } else if (message.equals(String.format("F%s", currentAction.getDoorNumber()))) {
+                                                    currentAction.setWasEmpty(false);
+                                                    currentAction.setCompleted(true);
+                                                    setButtonsVisibility(false, true, true);
+                                                    boolean success = currentAction.isCheckIn();
+                                                    appendOperationMessage(String.format("%s号门已关闭，检测到物体 \n 结果%s\n",
+                                                            currentAction.getDoorNumber(), success ? "正常" : "异常"));
+                                                } else {
+                                                    // display unexpected data.
+                                                    setOperationMessage(String.format("接收到未想定消息:%s\n", message));
+                                                }
                                             }
                                         }
                                     } catch (UnsupportedEncodingException e) {
@@ -152,7 +184,8 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             });
-                            setOperationMessage("USB连接成功,请准备5个小东西做存放检测，点击开始按钮开始测试");
+                            setOperationMessage("USB连接成功,请准备5个小东西做存放检测，点击开始按钮开始测试\n");
+                            setButtonsVisibility(true, false, false);
                         } else {
                             Log.d("SERIAL", "PORT NOT OPEN");
                         }
@@ -199,8 +232,7 @@ public class MainActivity extends AppCompatActivity {
         }
         connection = null;
         device = null;
-        setOperationMessage("USB连接断开");
-        setButtonsVisibility(false, false, false);
+        initUIState();
     }
 
     private void setOperationMessage(final String message) {
@@ -237,13 +269,14 @@ public class MainActivity extends AppCompatActivity {
     public void onStartClick(View view) {
         currentCommand = 0;
         performAction(actions.get(currentCommand));
-        setButtonsVisibility(false, true, true);
+        setButtonsVisibility(false, false, true);
     }
 
     private void performAction(LockerAction action) {
         if (!action.issued()) {
-            setOperationMessage(String.format("%s号门将开启，请%s物体\n",action.getDoorNumber(), action.isCheckIn()?"存入":"取出"));
-            String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
+            setOperationMessage(String.format("%s号门将开启，请%s物体\n", action.getDoorNumber(), action.isCheckIn() ? "存入" : "取出"));
+            String command = String.format("O%s%s\n", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
+            Log.d("Debug", command);
             serialPort.write(command.getBytes(Charset.forName("ASCII")));
             action.setIssued(true);
         }
