@@ -24,7 +24,7 @@
                 android:text="Operation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/textView"
+                android:id="@+id/operationText"
                 android:gravity="center"
                 android:layout_weight="0.27"
                 android:textAlignment="center"
@@ -34,19 +34,19 @@
                 android:text="开始"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/button" />
+                android:id="@+id/startButton" />
 
             <Button
                 android:text="下一步"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/button5" />
+                android:id="@+id/nextButton" />
 
             <Button
                 android:text="中止"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/button4" />
+                android:id="@+id/stopButton" />
 
         </LinearLayout>
 

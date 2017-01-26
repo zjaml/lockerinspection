@@ -22,7 +22,9 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -33,33 +35,42 @@ public class MainActivity extends AppCompatActivity {
     UsbSerialDevice serialPort;
     UsbDevice device;
 
-    TextView doorNumberText, logText;
-//    Button checkInButton, checkOutButton, doorButton, emptyButton, clearButton;
+    TextView operationText, logText;
+    Button startButton, nextButton, stopButton;
+
+    List<LockerAction> actions = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
-//        doorNumberText = (TextView) findViewById(R.id.doorNumberText);
+        usbManager = (UsbManager) getSystemService(USB_SERVICE);
         logText = (TextView) findViewById(R.id.logText);
         logText.setMovementMethod(new ScrollingMovementMethod());
-//        checkInButton = (Button) findViewById(R.id.checkInButton);
-//        checkOutButton = (Button) findViewById(R.id.checkoutButton);
-//        doorButton = (Button) findViewById(R.id.doorButton);
-//        emptyButton = (Button) findViewById(R.id.emptyButton);
-//        clearButton = (Button) findViewById(R.id.clearButton);
-
-        setUiEnabled(false);
-        registerBroadCastEvent();
-        requestConnectionPermission();
+        operationText = (TextView) findViewById(R.id.operationText);
+        startButton = (Button) findViewById(R.id.startButton);
+        nextButton = (Button) findViewById(R.id.nextButton);
+        stopButton = (Button) findViewById(R.id.stopButton);
+        initActions();
     }
 
+    private void initActions() {
+        //checkin 6 then checkout 6, do 5 loops to check all 30 boxes.
+        int doorNumber = 1;
+        boolean isCheckIn;
+        for (int i = 0; i < 5; i++) {
+            isCheckIn = i % 2 == 0;
+            for (int j = 0; j < 6; j++) {
+                actions.add(new LockerAction(isCheckIn, String.format("%02d", doorNumber)));
+                doorNumber++;
+            }
+        }
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(serialPort == null){
+        if (serialPort == null) {
             requestConnectionPermission();
         }
         registerBroadCastEvent();
@@ -71,14 +82,11 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(broadcastReceiver);
     }
 
-    private void registerBroadCastEvent(){
+    private void registerBroadCastEvent() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-//        below need API 23 +
-//        filter.addAction(BatteryManager.ACTION_CHARGING);
-//        filter.addAction(BatteryManager.ACTION_DISCHARGING);
         filter.addAction(Intent.ACTION_BATTERY_LOW);
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(broadcastReceiver, filter);
@@ -129,15 +137,15 @@ public class MainActivity extends AppCompatActivity {
                 requestConnectionPermission();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 disconnect();
-            }else if(intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)){
+            } else if (intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
                 int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
                 int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-                float batteryPct = level / (float)scale;
-                if(batteryPct < 0.15 && status== BatteryManager.BATTERY_STATUS_DISCHARGING){
+                float batteryPct = level / (float) scale;
+                if (batteryPct < 0.15 && status == BatteryManager.BATTERY_STATUS_DISCHARGING) {
                     sendCommand("LOW");
                 }
-                if(batteryPct > 0.95 && status== BatteryManager.BATTERY_STATUS_CHARGING){
+                if (batteryPct > 0.95 && status == BatteryManager.BATTERY_STATUS_CHARGING) {
                     sendCommand("HIGH");
                 }
             }
@@ -170,12 +178,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void disconnect() {
         setUiEnabled(false);
-        if(serialPort != null) {
+        if (serialPort != null) {
             serialPort.close();
         }
         connection = null;
         device = null;
-        tvAppend(logText,"\nSerial Connection Closed! \n");
+        tvAppend(logText, "\nSerial Connection Closed! \n");
     }
 
     public void setUiEnabled(boolean bool) {
@@ -197,12 +205,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void sendCommand(String commandFormatter){
-        if(connection != null){
+    private void sendCommand(String commandFormatter) {
+        if (connection != null) {
             //trim does the magic when door number is not specified for door/empty command.
-            String command = String.format(commandFormatter, doorNumberText.getText()).trim();
-            serialPort.write(command.getBytes(Charset.forName("ASCII")));
-            tvAppend(logText, String.format("\nCommand: %s \n", command));
+//            String command = String.format(commandFormatter, doorNumberText.getText()).trim();
+//            serialPort.write(command.getBytes(Charset.forName("ASCII")));
+//            tvAppend(logText, String.format("\nCommand: %s \n", command));
         }
     }
 
@@ -226,12 +234,12 @@ public class MainActivity extends AppCompatActivity {
         logText.setText("");
     }
 
-    public void onChargeClicked(View view){
+    public void onChargeClicked(View view) {
         Log.d("CHARGE", "LOW");
         sendCommand("LOW");
     }
 
-    public void onDischargeClicked(View view){
+    public void onDischargeClicked(View view) {
         Log.d("CHARGE", "HIGH");
         sendCommand("HIGH");
     }
