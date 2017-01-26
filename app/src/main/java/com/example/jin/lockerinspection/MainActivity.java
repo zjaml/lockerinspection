@@ -8,22 +8,16 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -135,10 +129,16 @@ public class MainActivity extends AppCompatActivity {
                                                 currentAction.setWasEmpty(true);
                                                 currentAction.setCompleted(true);
                                                 setButtonsVisibility(false, true, true);
+                                                boolean success = !currentAction.isCheckIn();
+                                                appendOperationMessage(String.format("%s号门已关闭，未检测到物体，结果%s\n",
+                                                        currentAction.getDoorNumber(),success?"正常":"异常"));
                                             } else if (data.equals(String.format("F%s", currentAction.getDoorNumber()))) {
                                                 currentAction.setWasEmpty(false);
                                                 currentAction.setCompleted(true);
                                                 setButtonsVisibility(false, true, true);
+                                                boolean success = currentAction.isCheckIn();
+                                                appendOperationMessage(String.format("%s号门已关闭，检测到物体，结果%s\n",
+                                                        currentAction.getDoorNumber(),success?"正常":"异常"));
                                             } else {
                                                 // display unexpected data.
                                                 setOperationMessage(String.format("接收到未想定消息:%s", data));
@@ -239,8 +239,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void performAction(LockerAction action) {
         if (!action.issued()) {
+            setOperationMessage(String.format("%s号门将开启，请%s物体\n",action.getDoorNumber(), action.isCheckIn()?"存入":"取出"));
             String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
             serialPort.write(command.getBytes(Charset.forName("ASCII")));
+            action.setIssued(true);
         }
     }
 
