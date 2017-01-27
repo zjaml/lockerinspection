@@ -15,13 +15,16 @@ void loop() {
         // Process message when new line character is recieved
         if (recieved == '\n')
         {
-            Serial.println(inData);
-            Serial.println(inData.length());
             if(inData.startsWith("O")){
-              Serial.println("A");
-              delay(2000);
-              Serial.println('E' + inData.substring(1,3));
+              Serial.print("A\n");
+              delay(3000);
+              if(inData.substring(3,4)=="T"){
+                Serial.print('F' + inData.substring(1,3) + '\n');
+              }else{
+                Serial.print('E' + inData.substring(1,3) + '\n');
+              }
             }
+            inData = "";
         }
     }
 }
