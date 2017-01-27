@@ -193,14 +193,14 @@ public class MainActivity extends AppCompatActivity {
                 currentAction.setCompleted(true);
                 setButtonsVisibility(false, true, true);
                 boolean success = !currentAction.isCheckIn();
-                appendOperationMessage(String.format("%s号门已关闭，未检测到物体 \n 结果%s\n",
+                setOperationMessage(String.format("%s号门已关闭，未检测到物体 \n 结果%s\n",
                         currentAction.getDoorNumber(), success ? "正常" : "异常"));
             } else if (message.equals(String.format("F%s", currentAction.getDoorNumber()))) {
                 currentAction.setWasEmpty(false);
                 currentAction.setCompleted(true);
                 setButtonsVisibility(false, true, true);
                 boolean success = currentAction.isCheckIn();
-                appendOperationMessage(String.format("%s号门已关闭，检测到物体 \n 结果%s\n",
+                setOperationMessage(String.format("%s号门已关闭，检测到物体 \n 结果%s\n",
                         currentAction.getDoorNumber(), success ? "正常" : "异常"));
             } else {
                 // display unexpected data.
