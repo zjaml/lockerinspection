@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
             setOperationMessage(String.format("%s号门将开启，请%s物体\n", action.getDoorNumber(), action.isCheckIn() ? "存入" : "取出"));
             String command = String.format("O%s%s\n", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
             Log.d("Debug", command);
-            serialPort.write(command.getBytes(Charset.forName("ASCII")));
+            serialPort.write(command.getBytes(Charset.forName("US-ASCII")));
             action.setIssued(true);
         }
     }
