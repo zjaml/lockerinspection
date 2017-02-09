@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                                         public void onReceivedData(byte[] bytes) {
                                             String data;
                                             try {
-                                                data = new String(bytes, "ASCII");
+                                                data = new String(bytes, "US-ASCII");
                                                 for (char ch : data.toCharArray()) {
                                                     if (ch != '\n') {
                                                         messageBuffer.append(ch);
