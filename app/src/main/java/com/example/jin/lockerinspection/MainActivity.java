@@ -25,6 +25,9 @@ import io.kiny.bluetooth.FakeBTClient;
 
 
 public class MainActivity extends AppCompatActivity {
+    public static final int COLOR_SUCCESS = Color.rgb(72, 145, 116);
+    public static final int COLOR_NORMAL = Color.BLACK;
+    public static final int COLOR_FAILURE = Color.rgb(128, 45, 21);
     TextView operationText, logText, statusText;
     Button startButton, nextButton, stopButton;
 
@@ -50,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
                     setUIConnected(true);
                     break;
                 case Constants.MESSAGE_INCOMING_MESSAGE:
-                    processMessage((String)msg.obj);
+                    processMessage((String) msg.obj);
                     break;
             }
         }
@@ -93,9 +96,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void setUIConnected(boolean connected) {
         statusText.setText(connected ? "Connected" : "Disconnected");
-        if(!connected)
-            operationText.setText("请连接储物柜的USB\n");
-        statusText.setTextColor(connected ? Color.rgb(72, 145, 116) : Color.rgb(128, 45, 21));
+        if (!connected)
+            operationText.setText("点击开始按钮开始测试\n");
+        statusText.setTextColor(connected ? COLOR_SUCCESS : COLOR_FAILURE);
         startButton.setEnabled(connected);
         stopButton.setEnabled(connected);
         nextButton.setEnabled(connected);
@@ -130,27 +133,28 @@ public class MainActivity extends AppCompatActivity {
                 currentAction.setCompleted(true);
                 setButtonStates(false, true, true);
                 boolean success = !currentAction.isCheckIn();
-                setOperationMessage(String.format("%s号门已关闭，未检测到物体 \n 结果%s\n",
-                        currentAction.getDoorNumber(), success ? "正常" : "异常"));
+                setOperationMessage(String.format("%s号门已关闭，未检测到物体    (结果%s)\n",
+                        currentAction.getDoorNumber(), success ? "正常" : "异常"), success);
             } else if (message.equals(String.format("F%s", currentAction.getDoorNumber()))) {
                 currentAction.setWasEmpty(false);
                 currentAction.setCompleted(true);
                 setButtonStates(false, true, true);
                 boolean success = currentAction.isCheckIn();
-                setOperationMessage(String.format("%s号门已关闭，检测到物体 \n 结果%s\n",
-                        currentAction.getDoorNumber(), success ? "正常" : "异常"));
+                setOperationMessage(String.format("%s号门已关闭，检测到物体   (结果%s)\n",
+                        currentAction.getDoorNumber(), success ? "正常" : "异常"), success);
             } else {
                 // display unexpected data.
-                setOperationMessage(String.format("接收到未想定消息:%s\n", message));
+                setOperationMessage(String.format("接收到未想定消息:%s\n", message), false);
             }
         }
     }
 
-    private void setOperationMessage(final String message) {
+    private void setOperationMessage(final String message, final boolean succeed) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 operationText.setText(message);
+                operationText.setTextColor(succeed ? COLOR_NORMAL : COLOR_FAILURE);
                 logText.append(message);
             }
         });
@@ -181,8 +185,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void performAction(LockerAction action) {
         if (!action.issued()) {
-            setOperationMessage(String.format("%s号门将开启，请%s物体\n", action.getDoorNumber(), action.isCheckIn() ? "存入" : "取出"));
-            String command = String.format("O%s%s\n", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
+
+            setOperationMessage(String.format("%s号门将开启，请%s物体\n", action.getDoorNumber(), action.isCheckIn() ? "存入" : "取出"), true);
+            String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
             Log.d("Debug", command);
             if (isBtConnected()) {
                 mBluetoothClient.sendCommand(command);
