@@ -16,8 +16,8 @@
 
         <LinearLayout
             android:orientation="vertical"
-            android:layout_width="260sp"
-            android:layout_weight="0.33"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent"
             android:weightSum="1">
 
@@ -66,15 +66,15 @@
 
         <LinearLayout
             android:orientation="vertical"
-            android:layout_weight="0.67"
+            android:layout_weight="1"
             android:layout_height="match_parent"
-            android:layout_width="wrap_content">
+            android:layout_width="0dp">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:id="@+id/logText"
                 android:scrollbars="vertical"
-                android:textAlignment="center" />
+                android:textAlignment="viewStart" />
         </LinearLayout>
     </LinearLayout>
 
