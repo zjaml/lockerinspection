@@ -1,1 +1,3 @@
 include ':app'
+include 'lockermanager'
+project(':lockermanager').projectDir = new File(settingsDir, '../lockermanager/library')
