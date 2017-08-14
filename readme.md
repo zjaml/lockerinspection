@@ -1,3 +1,6 @@
+# Dependency
+This project depend on LockerManager library which it assumes to be located in ../LockerManager directory. If the LockerManager is not cloned yet, it needs to be cloned first.
+
 # Actions
 * Start
 * Proceed
