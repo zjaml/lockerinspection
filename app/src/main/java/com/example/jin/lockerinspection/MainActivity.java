@@ -1,12 +1,13 @@
 package com.example.jin.lockerinspection;
 
-import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -16,15 +17,15 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-
-import io.kiny.bluetooth.BluetoothClient;
-import io.kiny.bluetooth.BluetoothClientInterface;
-import io.kiny.bluetooth.Constants;
-import io.kiny.bluetooth.FakeBTClient;
+import io.kiny.BoxStatus;
+import io.kiny.LockerManager;
 
 
 public class MainActivity extends AppCompatActivity {
+    public static final String TARGET_DEVICE_NAME = "HC-06";
+    private LockerManager mLockerManager;
     public static final int COLOR_SUCCESS = Color.rgb(72, 145, 116);
     public static final int COLOR_NORMAL = Color.BLACK;
     public static final int COLOR_FAILURE = Color.rgb(128, 45, 21);
@@ -33,28 +34,46 @@ public class MainActivity extends AppCompatActivity {
 
     List<LockerAction> actions = new ArrayList<>();
     List<LockerAction> previousResult = null;
-
     //the current command index, -1 stands for testing stopped.
     int currentCommand = -1;
 
-    private BluetoothClientInterface mBluetoothClient;
-    private final Handler mHandler = new Handler() {
+    private BroadcastReceiver lockerBroadcastReceiver = new BroadcastReceiver() {
         @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case Constants.MESSAGE_CONNECTION_LOST:
-                    // reconnect since connection is lost
-                    if (mBluetoothClient != null) {
-                        mBluetoothClient.connect();
-                    }
-                    setUIConnected(false);
-                    break;
-                case Constants.MESSAGE_CONNECTED:
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case LockerManager.ACTION_LOCKER_READY:
+                    Log.d("LockerManager", "ACTION_LOCKER_READY");
+                case LockerManager.ACTION_LOCKER_CONNECTED:
                     setUIConnected(true);
                     break;
-                case Constants.MESSAGE_INCOMING_MESSAGE:
-                    processMessage((String) msg.obj);
+                case LockerManager.ACTION_LOCKER_DISCONNECTED:
+                    setUIConnected(false);
                     break;
+                case LockerManager.ACTION_LOCKER_CHARGING:
+                    break;
+                case LockerManager.ACTION_LOCKER_DISCHARGING:
+                    break;
+                case LockerManager.ACTION_LOCKER_BOX_OPENED: {
+                    break;
+                }
+                case LockerManager.ACTION_LOCKER_BOX_CLOSED: {
+                    if (currentCommand >= 0) {
+                        String boxNumber = intent.getStringExtra("box");
+                        String boxStatus = intent.getStringExtra("status");
+                        LockerAction currentAction = actions.get(currentCommand);
+                        if (Objects.equals(boxNumber, currentAction.getDoorNumber())) {
+                            currentAction.setWasEmpty(Objects.equals(boxStatus, BoxStatus.BOX_EMPTY));
+                            currentAction.setCompleted(true);
+                            setButtonStates(false, true, true);
+                            boolean success = currentAction.isCheckIn() && !currentAction.wasEmpty();
+                            setOperationMessage(String.format("%s号门已关闭，%s    (结果%s)\n",
+                                    currentAction.getDoorNumber(),
+                                    currentAction.wasEmpty() ? "未检测到物体" : "检测到物体",
+                                    success ? "正常" : "异常"), success);
+                        }
+                    }
+                    break;
+                }
             }
         }
     };
@@ -73,26 +92,38 @@ public class MainActivity extends AppCompatActivity {
         initActions();
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setUIConnected(false);
-        mBluetoothClient = new FakeBTClient(mHandler, false);
+        mLockerManager = new LockerManager(TARGET_DEVICE_NAME, getApplicationContext(), true);
+        mLockerManager.start();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBluetoothClient.disconnect();
-        mBluetoothClient.getBluetoothBroadcastReceiver().safeUnregister(this);
-        mBluetoothClient = null;
+        mLockerManager.stop();
+        mLockerManager = null;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (mBluetoothClient != null && mBluetoothClient.getState() == BluetoothClient.STATE_NONE) {
-            mBluetoothClient.connect();
-            mBluetoothClient.getBluetoothBroadcastReceiver()
-                    .safeRegister(this, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED));
-        }
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_READY);
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_BOX_CLOSED);
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_BOX_OPENED);
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_CHARGING);
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_DISCHARGING);
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_CONNECTED);
+        intentFilter.addAction(LockerManager.ACTION_LOCKER_DISCONNECTED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(lockerBroadcastReceiver, intentFilter);
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(lockerBroadcastReceiver);
+    }
+
 
     public void setUIConnected(boolean connected) {
         statusText.setText(connected ? "Connected" : "Disconnected");
@@ -178,19 +209,13 @@ public class MainActivity extends AppCompatActivity {
         setButtonStates(false, false, true);
     }
 
-
-    public boolean isBtConnected() {
-        return mBluetoothClient != null && mBluetoothClient.getState() == BluetoothClientInterface.STATE_CONNECTED;
-    }
-
     private void performAction(LockerAction action) {
         if (!action.issued()) {
-
             setOperationMessage(String.format("%s号门将开启，请%s物体\n", action.getDoorNumber(), action.isCheckIn() ? "存入" : "取出"), true);
-            String command = String.format("O%s%s", action.getDoorNumber(), action.isCheckIn() ? "T" : "R");
-            Log.d("Debug", command);
-            if (isBtConnected()) {
-                mBluetoothClient.sendCommand(command);
+            if (action.isCheckIn()) {
+                mLockerManager.requestToCheckIn(action.getDoorNumber());
+            } else {
+                mLockerManager.requestToCheckOut(action.getDoorNumber());
             }
             action.setIssued(true);
         }

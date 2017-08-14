@@ -49,7 +49,7 @@ public class LockerAction {
         this.completed = completed;
     }
 
-    public boolean isWasEmpty() {
+    public boolean wasEmpty() {
         return wasEmpty;
     }
 
