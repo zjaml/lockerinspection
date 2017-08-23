@@ -1,13 +1,8 @@
 package com.example.jin.lockerinspection;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -20,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.kiny.BoxStatus;
+import io.kiny.LockerCallback;
 import io.kiny.LockerManager;
 
 
@@ -37,42 +33,50 @@ public class MainActivity extends AppCompatActivity {
     //the current command index, -1 stands for testing stopped.
     int currentCommand = -1;
 
-    private BroadcastReceiver lockerBroadcastReceiver = new BroadcastReceiver() {
+    private LockerCallback lockerCallback = new LockerCallback() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case LockerManager.ACTION_LOCKER_READY:
-                    Log.d("LockerManager", "ACTION_LOCKER_READY");
-                case LockerManager.ACTION_LOCKER_CONNECTED:
-                    setUIConnected(true);
-                    break;
-                case LockerManager.ACTION_LOCKER_DISCONNECTED:
-                    setUIConnected(false);
-                    break;
-                case LockerManager.ACTION_LOCKER_CHARGING:
-                    break;
-                case LockerManager.ACTION_LOCKER_DISCHARGING:
-                    break;
-                case LockerManager.ACTION_LOCKER_BOX_OPENED: {
-                    break;
-                }
-                case LockerManager.ACTION_LOCKER_BOX_CLOSED: {
-                    if (currentCommand >= 0) {
-                        String boxNumber = intent.getStringExtra("box");
-                        String boxStatus = intent.getStringExtra("status");
-                        LockerAction currentAction = actions.get(currentCommand);
-                        if (Objects.equals(boxNumber, currentAction.getDoorNumber())) {
-                            currentAction.setWasEmpty(Objects.equals(boxStatus, BoxStatus.BOX_EMPTY));
-                            currentAction.setCompleted(true);
-                            setButtonStates(false, true, true);
-                            boolean success = currentAction.isCheckIn() && !currentAction.wasEmpty();
-                            setOperationMessage(String.format("%s号门已关闭，%s    (结果%s)\n",
-                                    currentAction.getDoorNumber(),
-                                    currentAction.wasEmpty() ? "未检测到物体" : "检测到物体",
-                                    success ? "正常" : "异常"), success);
-                        }
-                    }
-                    break;
+        public void ready() {
+
+        }
+
+        @Override
+        public void connected() {
+            setUIConnected(true);
+        }
+
+        @Override
+        public void disconnected() {
+            setUIConnected(false);
+        }
+
+        @Override
+        public void charging() {
+
+        }
+
+        @Override
+        public void discharging() {
+
+        }
+
+        @Override
+        public void boxOpened(String box) {
+
+        }
+
+        @Override
+        public void boxClosed(String box, String status) {
+            if (currentCommand >= 0) {
+                LockerAction currentAction = actions.get(currentCommand);
+                if (Objects.equals(box, currentAction.getDoorNumber())) {
+                    currentAction.setWasEmpty(Objects.equals(status, BoxStatus.BOX_EMPTY));
+                    currentAction.setCompleted(true);
+                    setButtonStates(false, true, true);
+                    boolean success = currentAction.isCheckIn() && !currentAction.wasEmpty();
+                    setOperationMessage(String.format("%s号门已关闭，%s    (结果%s)\n",
+                            currentAction.getDoorNumber(),
+                            currentAction.wasEmpty() ? "未检测到物体" : "检测到物体",
+                            success ? "正常" : "异常"), success);
                 }
             }
         }
@@ -92,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         initActions();
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setUIConnected(false);
-        mLockerManager = new LockerManager(TARGET_DEVICE_NAME, getApplicationContext(), true);
+        mLockerManager = new LockerManager(TARGET_DEVICE_NAME, lockerCallback, this, true);
         mLockerManager.start();
     }
 
@@ -101,27 +105,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         mLockerManager.stop();
         mLockerManager = null;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_READY);
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_BOX_CLOSED);
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_BOX_OPENED);
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_CHARGING);
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_DISCHARGING);
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_CONNECTED);
-        intentFilter.addAction(LockerManager.ACTION_LOCKER_DISCONNECTED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(lockerBroadcastReceiver, intentFilter);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(lockerBroadcastReceiver);
     }
 
 
