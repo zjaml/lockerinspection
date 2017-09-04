@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         initActions();
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setUIConnected(false);
-        mLockerManager = new LockerManager(TARGET_DEVICE_NAME, lockerCallback, this, true);
+        mLockerManager = new LockerManager(TARGET_DEVICE_NAME, lockerCallback, this, true, 30);
         mLockerManager.start();
     }
 
