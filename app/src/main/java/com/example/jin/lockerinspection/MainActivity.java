@@ -80,6 +80,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+
+        @Override
+        public void onException(String errorMessage) {
+
+        }
     };
 
     @Override
